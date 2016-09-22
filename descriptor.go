@@ -30,7 +30,10 @@ func (r *descriptorReader) Read(p []byte) (n int, err error) {
 
 	z, err := r.br.Peek(n + readAhead)
 	if err != nil {
-		return 0, err
+		if err == io.EOF && len(z) < 46+22 { // Min length of Central directory + End of central directory
+			return 0, err
+		}
+		n = len(z)
 	}
 
 	// Look for header of next file or central directory
@@ -38,7 +41,7 @@ func (r *descriptorReader) Read(p []byte) (n int, err error) {
 	s := 16
 	for !r.eof {
 		i := bytes.Index(z[s:len(z)-2], sigBytes) + s
-		if i == s-1 {
+		if i == -1 {
 			break
 		}
 
