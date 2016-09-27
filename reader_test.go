@@ -3,12 +3,21 @@ package zipstream
 import (
 	"archive/zip"
 	"bytes"
+	"io"
 	"io/ioutil"
+	"math/rand"
 	"testing"
 )
 
 func TestReader(t *testing.T) {
-	s := []byte(`<poc><firstName>Juan</firstName></poc>`)
+	testReader(t, []byte(`<poc><firstName>Juan</firstName></poc>`))
+
+	s := new(bytes.Buffer)
+	io.Copy(s, io.LimitReader(rand.New(rand.NewSource(1)), 16384))
+	testReader(t, s.Bytes())
+}
+
+func testReader(t *testing.T, s []byte) {
 
 	var wbuf bytes.Buffer
 	z := zip.NewWriter(&wbuf)
@@ -41,4 +50,5 @@ func TestReader(t *testing.T) {
 			t.Fatal("Decompressed data does not match original")
 		}
 	}
+
 }
