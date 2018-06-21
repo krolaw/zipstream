@@ -23,7 +23,7 @@ const (
 // The Next method advances to the next file in the archive (including the first),
 // and then it can be treated as an io.Reader to access the file's data.
 // The Buffered method recovers any bytes read beyond the end of the zip file,
-// necessary if you plan to process anything after it, such as another zip file.
+// necessary if you plan to process anything after it that is not another zip file.
 type Reader struct {
 	io.Reader
 	br *bufio.Reader
@@ -37,6 +37,8 @@ func NewReader(r io.Reader) *Reader {
 // Next advances to the next entry in the zip archive.
 //
 // io.EOF is returned when the end of the zip file has been reached.
+// If Next is called again, it will presume another zip file immediately follows
+// and it will advance into it.
 func (r *Reader) Next() (*zip.FileHeader, error) {
 	if r.Reader != nil {
 		if _, err := io.Copy(ioutil.Discard, r.Reader); err != nil {
@@ -106,5 +108,5 @@ func (r *Reader) Next() (*zip.FileHeader, error) {
 
 // Buffered returns any bytes beyond the end of the zip file that it may have
 // read. These are necessary if you plan to process anything after it,
-// such as another zip file.
+// that isn't another zip file.
 func (r *Reader) Buffered() io.Reader { return r.br }

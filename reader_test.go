@@ -37,10 +37,9 @@ func testReader(t *testing.T, s []byte) {
 		}
 	}
 
-	inputStream := io.Reader(&wbuf)
+	zr := NewReader(&wbuf)
 	for j := 0; j < 2; j++ {
 		fcount := 0
-		zr := NewReader(inputStream)
 		for {
 			_, err := zr.Next()
 			if err != nil {
@@ -61,7 +60,5 @@ func testReader(t *testing.T, s []byte) {
 				t.Fatal("Decompressed data does not match original")
 			}
 		}
-		// Prepend buffered bytes back to inputStream
-		inputStream = io.MultiReader(zr.Buffered(), inputStream)
 	}
 }
