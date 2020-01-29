@@ -40,6 +40,13 @@ func (r *descriptorReader) Read(p []byte) (n int, err error) {
 	discard := n
 	s := 16
 	for !r.eof && s < n {
+
+		//Determine if we have enough buffer data to read
+		if s >= len(z)-4 {
+			r.eof = true
+			return n, io.EOF
+		}
+
 		i := bytes.Index(z[s:len(z)-4], sigBytes) + s
 		if i == -1 {
 			break
