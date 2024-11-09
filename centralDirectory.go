@@ -8,9 +8,9 @@ import (
 	"io"
 )
 
-// We're not interested in the central directories data, we just want to skip over it,
-// clearing the stream of the current zip, in case anything needs to be sent over the
-// same stream.
+// We're not interested in the central directory's data, we just want to skip over it,
+// clearing the stream of the current zip, in case anything else needs to be sent over
+// the same stream.
 func discardCentralDirectory(br *bufio.Reader) error {
 	for {
 		sigBytes, err := br.Peek(4)
@@ -38,7 +38,6 @@ func discardCentralDirectory(br *bufio.Reader) error {
 }
 
 func discardDirectoryHeaderRecord(br *bufio.Reader) error {
-
 	if _, err := br.Discard(28); err != nil {
 		return err
 	}

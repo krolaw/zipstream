@@ -6,10 +6,10 @@ package zipstream
 import (
 	"archive/zip"
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
 )
 
 const (
@@ -41,22 +41,34 @@ func NewReader(r io.Reader) *Reader {
 // and it will advance into it.
 func (r *Reader) Next() (*zip.FileHeader, error) {
 	if r.Reader != nil {
-		if _, err := io.Copy(ioutil.Discard, r.Reader); err != nil {
+		if _, err := io.Copy(io.Discard, r.Reader); err != nil {
 			return nil, err
 		}
 	}
-	sigBytes, err := r.br.Peek(4)
-	if err != nil {
-		return nil, err
-	}
 
-	switch sig := binary.LittleEndian.Uint32(sigBytes); sig {
-	case fileHeaderSignature:
+	for {
+		sigData, err := r.br.Peek(4096)
+		if err != nil {
+			if err == io.EOF && len(sigData) < 46+22 { // Min length of Central directory + End of central directory
+				return nil, err
+			}
+		}
+
+		switch sig := binary.LittleEndian.Uint32(sigData); sig {
+		case fileHeaderSignature:
+			break
+		case directoryHeaderSignature: // Directory appears at end of file so we are finished
+			return nil, discardCentralDirectory(r.br)
+		default:
+			index := bytes.Index(sigData[1:], sigBytes)
+			if index == -1 {
+				r.br.Discard(len(sigData) - len(sigBytes) + 1)
+				continue
+			} else {
+				r.br.Discard(index + 1)
+			}
+		}
 		break
-	case directoryHeaderSignature: // Directory appears at end of file so we are finished
-		return nil, discardCentralDirectory(r.br)
-	default:
-		return nil, zip.ErrFormat
 	}
 
 	headBuf := make([]byte, fileHeaderLen)

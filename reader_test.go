@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"testing"
 )
@@ -52,7 +51,7 @@ func testReader(t *testing.T, s []byte) {
 				break // No more files
 			}
 			fcount++
-			s2, err := ioutil.ReadAll(zr)
+			s2, err := io.ReadAll(zr)
 			if err != nil {
 				t.Fatal(err)
 			}
