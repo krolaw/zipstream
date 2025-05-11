@@ -39,7 +39,7 @@ func (r *descriptorReader) Read(p []byte) (n int, err error) {
 	// Look for header of next file or central directory
 	discard := n
 	s := 16
-	for !r.eof && s < n {
+	for !r.eof && s < len(z)-4 {
 		i := bytes.Index(z[s:len(z)-4], sigBytes) + s
 		if i == -1 {
 			break
